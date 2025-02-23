@@ -25,7 +25,13 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+/data
+/archive
+/images
+models_best_weights.pt
+models_best_weights2.pt
 
+models_best_weights4.pt
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.

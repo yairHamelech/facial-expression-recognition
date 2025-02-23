@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title>Feeling Prediction Stats</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-heatmap"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            margin: 0;
+            text-align: center;
+            display: grid;
+            gap: 40px;
+        }
+.bar{
+bottom:0;
+box-shadow: rgba(0, 0, 0, 0.1) 0px 10px 50px;
+display:inline;
+height:100%;
+position:fixed;
+
+left:0;
+margin:0;
+background-color:#F0F8FF;
+}
+.bar i{
+       align-items: center;
+            justify-content: center;
+            display: flex;
+height:20px;
+padding:40px;
+margin:0;}
+i:hover{
+background-color:#dceaf5
+}
+        hr {
+            width: 70vw;
+            color: black;
+        }
+a{
+color:black;}
+        .headLines {
+            padding: 20px;
+            border: solid #E8E8E8 3px;
+            height: 50vh;
+            display: grid;
+            text-align: left;
+            grid-template-columns: auto;
+            align-items: center;
+            justify-content: center;
+        }
+
+        h1 {
+            text-align: left;
+            align-items: center;
+            justify-content: center;
+            display: flex;
+            height: 100px;
+            padding: 20px;
+            border: solid #E8E8E8 3px;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 0;
+        }
+
+        .container {
+            border-radius: 12px;
+            box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+            height: 75vh;
+            width: 80vw;
+            position: relative;
+            left: 50%;
+            transform: translate(-50%, 0%);
+            align-items: center;
+            justify-content: center;
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        canvas {
+            position: relative;
+            margin: 20px 0;
+        }
+
+        .avg {
+            width: 50vw;
+            height: 50vh;
+            padding: 20px;
+            border: solid #E8E8E8 3px;
+            border-radius: 5px;
+        }
+.heatMap{
+       width: 50vw;
+            height: 50vh;
+            padding: 20px;
+
+            border-radius: 5px;}
+        .avgPredictions {
+            height: 50vh;
+            border: solid #E8E8E8 3px;
+            border-radius: 5px;
+            display: grid;
+            text-align: left;
+            grid-template-columns: auto;
+            padding: 20px;
+        }
+
+        .avgPredictions div {
+            margin: 0;
+            padding: 0;
+            width: 150px;
+            position: relative;
+        }
+
+        .avgPredictions div h6 {
+            margin: 0;
+            padding: 0;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .avgPredictions div p {
+            font-size: 20px;
+            font-weight: 800;
+            margin: 0;
+            padding: 0;
+        }
+.emotion_classes{
+            height: 50vh;
+color:#00CED1;
+            display: grid;
+            text-align: left;
+            grid-template-columns: auto;
+            padding: 20px;}
+                    .emotion_classes div {
+            margin: 0;
+            padding: 0;
+            width: 150px;
+            position: relative;
+        }
+
+        .emotion_classes div h6 {
+            margin: 0;
+            padding: 0;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .emotion_classes div p {
+            font-size: 20px;
+            font-weight: 800;
+            margin: 0;
+            padding: 0;
+        }
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-box {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            width: 250px;
+        }
+
+        .stat-box h3 {
+            color: #3e8e41;
+        }
+
+        .stat-box p {
+            font-size: 1.2em;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+<div class="bar">  <a href="index.html"><i class="fas fa-home"></i></a>
+<i class="fas fa-play"></i></div>
+    <div class="container">
+        <div class="avg">
+            <canvas id="feelingChart"></canvas>
+        </div>
+        <div class="avgPredictions" id="avgPrediction">
+            <div>
+                <h6>angry</h6>
+                <p id="angry"></p>
+            </div>
+            <div>
+                <h6>disgust</h6>
+                <p id="disgust"></p>
+            </div>
+            <div>
+                <h6>fear</h6>
+                <p id="fear"></p>
+            </div>
+            <div>
+                <h6>happy</h6>
+                <p id="happy"></p>
+            </div>
+            <div>
+                <h6>neutral</h6>
+                <p id="neutral"></p>
+            </div>
+            <div>
+                <h6>sad</h6>
+                <p id="sad"></p>
+            </div>
+            <div>
+                <h6>surprise</h6>
+                <p id="surprise"></p>
+            </div>
+        </div>
+    </div>
+
+    <hr/>
+
+    <div class="container">
+        <!-- Heatmap Container -->
+        <canvas class="heatMap" id="heatmapCanvas"></canvas>
+    </div>
+
+    <script>
+        // Fetch predictions from local storage
+        const predictions = JSON.parse(localStorage.getItem("predictions"));
+        const classes = ['angry', 'disgust', 'fear', 'happy', 'neutral', 'sad', 'surprise'];
+
+        // If no predictions found in localStorage, set empty array
+        if (!predictions) {
+            alert("No predictions found in localStorage.");
+        }
+
+        // Calculate average predictions for each class
+        const averages = Array(classes.length).fill(0);
+        let totalPredictions = predictions.length;
+
+        // Sum up each class prediction score
+        predictions.forEach(pred => {
+            pred.forEach((score, index) => {
+                averages[index] += score;
+            });
+        });
+
+        // Calculate the average score for each class
+        const averageScores = averages.map(total => total / totalPredictions);
+
+        // Display the average predictions
+        document.getElementById('angry').innerText += averageScores[0].toFixed(2);
+        document.getElementById('disgust').innerText += averageScores[1].toFixed(2);
+        document.getElementById('fear').innerText += averageScores[2].toFixed(2);
+        document.getElementById('happy').innerText += averageScores[3].toFixed(2);
+        document.getElementById('neutral').innerText = averageScores[4].toFixed(2);
+        document.getElementById('sad').innerText = averageScores[5].toFixed(2);
+        document.getElementById('surprise').innerText = averageScores[6].toFixed(2);
+
+        // Create the average bar chart
+        const ctxBar = document.getElementById('feelingChart').getContext('2d');
+        new Chart(ctxBar, {
+            type: 'line',
+            data: {
+                labels: classes,
+                datasets: [{
+                    label: 'Average Score per Feeling',
+                    data: averageScores,
+                    backgroundColor: 'rgba(62, 142, 65, 0.6)',
+                    borderColor: 'rgba(62, 142, 65, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Average Score per Feeling'
+                    }
+                }
+            }
+        });
+
+        // Create the heatmap chart
+        const ctxHeatmap = document.getElementById('heatmapCanvas').getContext('2d');
+        const heatmapData = [];
+
+        // Generate heatmap data (each frame is a column and each emotion is a row)
+        predictions.forEach((pred, frameIdx) => {
+            pred.forEach((score, emotionIdx) => {
+                heatmapData.push({
+                    x: frameIdx,
+                    y: emotionIdx,
+                    v: score
+                });
+            });
+        });
+    function getColorForValue(value) {
+
+            value = Math.min(Math.max(value, 0.001), 0.9);
+
+
+            const r = Math.floor((value - 0.001) * (255 / 0.9)); // Red increases with value
+            const b = 255 - r; // Blue decreases as red increases
+
+            return `rgba(${r}, 0, ${b}, 0.8)`; // Return rgba with dynamic red and blue
+        }
+        new Chart(ctxHeatmap, {
+            type: 'scatter',
+
+            data: {  labels: classes,
+                datasets: [{
+                    label: 'Feeling Heatmap',
+                    data: heatmapData,
+                 backgroundColor: (context) => {
+                        const value = context.raw.v;
+                        return getColorForValue(value); // Use the custom color function
+                    },
+                    borderWidth: 1,
+                    radius:8,
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Video Frames'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Emotion Class'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>

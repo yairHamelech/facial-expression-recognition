@@ -9,27 +9,40 @@ import matplotlib.pyplot as plt
 class FaceModel(nn.Module):
     def __init__(self):
         super(FaceModel, self).__init__()
-        self.eff_net = timm.create_model('efficientnet_b0', pretrained=False, num_classes=7)
+        # Use efficientnet_b3 as base model
+        self.eff_net = timm.create_model('efficientnet_b3', pretrained=True, num_classes=7)
 
-    def forward(self, images):
+        # Modify the final layer (classifier) to have more neurons
+        self.eff_net.classifier = nn.Sequential(
+            nn.Linear(self.eff_net.classifier.in_features, 2048),  # Increase to 2048 neurons in hidden layer
+            nn.ReLU(),
+            nn.Dropout(0.5),  # Dropout to reduce overfitting
+            nn.Linear(2048, 7)  # Output layer (7 classes)
+        )
+
+    def forward(self, images, labels=None):
         logits = self.eff_net(images)
+        if labels is not None:
+            loss = nn.CrossEntropyLoss()(logits, labels)
+            return logits, loss
         return logits
+
 
 # מוריד את המודל
 model = FaceModel()
-model.load_state_dict(torch.load("models_best_weights2.pt", weights_only=True))
+model.load_state_dict(torch.load("models_best_weights.pt", weights_only=True))
 
 model.eval()
 
 # משנה את התמונה שתתאים למודל
 transform = transforms.Compose([
-    transforms.Grayscale(num_output_channels=3),
+
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 ])
 
-img_path = r'C:\Users\יאיר\PycharmProjects\pythonProject10\1000_F_170157165_Xp8pw5YnIPDhH3uBSyT87z8BS6yA69aT.jpg'
+img_path = r'C:\Users\yair2\PycharmProjects\facial-expression-recognition\istockphoto-184600247-612x612.jpg'
 image = Image.open(img_path)
 
 img_tensor = transform(image).unsqueeze(0)
